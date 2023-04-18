@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.2.1
+  name: ingress-nginx-controller-metrics
+  namespace: ingress-nginx
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 10254
+      protocol: TCP
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/component: service-monitor
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.2.1
+spec:
+  endpoints:
+    - port: metrics
+      interval: 30s
+  namespaceSelector:
+    matchNames:
+      - ingress-nginx
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller
+      app.kubernetes.io/instance: ingress-nginx
+      app.kubernetes.io/name: ingress-nginx
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/component: service-monitor
+    app.kubernetes.io/instance: ingress-nginx
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+    app.kubernetes.io/version: 1.2.1
+spec:
+  groups:
+  - name: ingress-nginx
+    rules:
+    - alert: NGINXConfigFailed
+      annotations:
+        description: bad ingress config - nginx config test failed
+        summary: uninstall the latest ingress changes to allow config reloads to resume
+      expr: count(nginx_ingress_controller_config_last_reload_successful == 0) > 0
+      for: 1s
+      labels:
+        severity: critical
+    - alert: NGINXCertificateExpiry
+      annotations:
+        description: ssl certificate(s) will expire in less then a week
+        summary: renew expiring certificates to avoid downtime
+      expr: (avg(nginx_ingress_controller_ssl_expire_time_seconds) by (host) - time())
+        < 604800
+      for: 1s
+      labels:
+        severity: critical
+    - alert: NGINXTooMany500s
+      annotations:
+        description: Too many 5XXs
+        summary: More than 5% of all requests returned 5XX, this requires your attention
+      expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"5.+"} ) / sum(nginx_ingress_controller_requests)
+        ) > 5
+      for: 1m
+      labels:
+        severity: warning
+    - alert: NGINXTooMany400s
+      annotations:
+        description: Too many 4XXs
+        summary: More than 5% of all requests returned 4XX, this requires your attention
+      expr: 100 * ( sum( nginx_ingress_controller_requests{status=~"4.+"} ) / sum(nginx_ingress_controller_requests)
+        ) > 5
+      for: 1m
+      labels:
+        severity: warning
