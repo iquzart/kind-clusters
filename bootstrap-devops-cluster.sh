@@ -4,6 +4,8 @@ set -euo pipefail
 
 readonly CLUSTER_NAME="devops-cluster"
 readonly CLUSTER_CONFIG_FILE="cluster-configs/devops-cluster.yaml"
+readonly KIND_IMAGE="kindest/node"
+readonly KIND_CUSTOM_IMAGE_TAG="with-org-ca"
 readonly K8S_VERSION=v1.26.3
 
 
@@ -31,7 +33,14 @@ prompt_for_applications() {
 create_new_cluster() {
   check_ports
   prompt_for_applications
-  envsubst < $CLUSTER_CONFIG_FILE | kind create cluster --image kindest/node:$K8S_VERSION --name $CLUSTER_NAME --config=-
+
+  # Use the custom image if 'custom-image' argument is provided and is set to 'true'
+  if [ "${custom-image}" = "true" ]; then
+    envsubst < $CLUSTER_CONFIG_FILE | kind create cluster --image $KIND_IMAGE:$K8S_VERSION-$KIND_CUSTOM_IMAGE_TAG --name $CLUSTER_NAME --config=-
+  else
+    envsubst < $CLUSTER_CONFIG_FILE | kind create cluster --image $KIND_IMAGE:$K8S_VERSION --name $CLUSTER_NAME --config=-
+  fi
+
 }
 
 # Entry point

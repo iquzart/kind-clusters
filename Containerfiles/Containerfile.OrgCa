@@ -1,0 +1,12 @@
+# Use a build argument to specify the base image tag
+ARG K8S_VERSION=1.26.3
+FROM kindest/node:v${K8S_VERSION}
+
+# Set a label to describe the purpose of the image
+LABEL Description="Add Corporate TLS Certificate"
+
+# Copy the Corporate TLS Certificate to the image's ca-certificates directory
+COPY Org-CA-Cert.crt /usr/local/share/ca-certificates/
+
+# Update the system's CA certificates to include the added Corporate TLS Certificate
+RUN update-ca-certificates
