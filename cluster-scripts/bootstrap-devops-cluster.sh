@@ -3,15 +3,15 @@
 set -euo pipefail
 
 readonly CLUSTER_NAME="devops-cluster"
-readonly CLUSTER_CONFIG_FILE="cluster-configs/devops-cluster.yaml"
+readonly CLUSTER_CONFIG_FILE="kind-cluster-configs/devops-cluster.yaml"
 readonly KIND_IMAGE="kindest/node"
 readonly KIND_CUSTOM_IMAGE_TAG="with-org-ca"
-readonly K8S_VERSION=v1.26.3
-
+readonly K8S_VERSION="v1.26.3"
+readonly APP_SCRIPTS_DIR="./scripts"
 
 # Check if port 80 or 443 is in use
 check_ports() {
-  if netstat -ln | grep ':80 ' || netstat -ln | grep ':443 '; then
+  if netstat -ln | grep -E ':80 |:443 '; then
     echo "Error: Port 80 or 443 is already in use."
     echo "Please ensure that any existing service using these ports does not conflict with the cluster's operation."
     exit 1
@@ -34,20 +34,24 @@ create_new_cluster() {
   check_ports
   prompt_for_applications
 
-  # Use the custom image if 'custom-image' argument is provided and is set to 'true'
-  if [ "${custom-image}" = "true" ]; then
-    envsubst < $CLUSTER_CONFIG_FILE | kind create cluster --image $KIND_IMAGE:$K8S_VERSION-$KIND_CUSTOM_IMAGE_TAG --name $CLUSTER_NAME --config=-
+  # Use the custom image if '--enable-custom-image' flag is provided
+  if [ "$ENABLE_CUSTOM_IMAGE" = true ]; then
+    envsubst < "$CLUSTER_CONFIG_FILE" | kind create cluster --image "$KIND_IMAGE:$K8S_VERSION-$KIND_CUSTOM_IMAGE_TAG" --name "$CLUSTER_NAME" --config=-
   else
-    envsubst < $CLUSTER_CONFIG_FILE | kind create cluster --image $KIND_IMAGE:$K8S_VERSION --name $CLUSTER_NAME --config=-
+    envsubst < "$CLUSTER_CONFIG_FILE" | kind create cluster --image "$KIND_IMAGE:$K8S_VERSION" --name "$CLUSTER_NAME" --config=-
   fi
-
 }
 
 # Entry point
 main() {
+  if [ "${1:-}" = "--enable-custom-image" ]; then
+    ENABLE_CUSTOM_IMAGE=true
+  else
+    ENABLE_CUSTOM_IMAGE=false
+  fi
 
   # Source all scripts in the scripts/ directory
-  for APP_INSTALL_SCRIPT in ./scripts/*.sh; do
+  for APP_INSTALL_SCRIPT in ${APP_SCRIPTS_DIR}/*.sh; do
     source "$APP_INSTALL_SCRIPT"
   done
 
@@ -60,12 +64,11 @@ main() {
     create_new_cluster
   fi
 
-  if [[ -z "$SELECTIONS" ]]; then
+  if [ -z "${SELECTIONS:-}" ]; then
     APPS=("None")
   else
     IFS=',' read -ra APPS <<< "$SELECTIONS"
   fi
-
 
   # Install selected applications
   for APP in "${APPS[@]}"; do
@@ -98,4 +101,4 @@ main() {
   done
 }
 
-main
+main "$@"
