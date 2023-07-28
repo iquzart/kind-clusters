@@ -2,8 +2,6 @@
 # Set the default Kubernetes version
 K8S_VERSION ?= 1.26.3
 
-CUSTOM_IMAGE_ENABLED ?= false
-
 # Define the Docker image name
 DOCKER_IMAGE_NAME := kindest/node
 
@@ -12,6 +10,8 @@ DOCKER_IMAGE_TAG_SUFFIX := with-org-ca
 
 # Combine the Kubernetes version and the suffix to form the complete image tag
 DOCKER_IMAGE_TAG := v$(K8S_VERSION)-$(DOCKER_IMAGE_TAG_SUFFIX)
+
+CLUSTER_SCRIPTS_DIR := cluster-scripts
 
 # Build the Docker image
 # Usage: make build [K8S_VERSION=<desired_version>]
@@ -31,9 +31,18 @@ clean-all-images:
 	docker images -q $(DOCKER_IMAGE_NAME) | grep $(DOCKER_IMAGE_TAG) | xargs -r docker rmi
 
 # Run the script to bootstrap the devops-cluster
-# Usage: make bootstrap-devops-cluster [custom-image=<true/false>]
+# Usage: make bootstrap-devops-cluster
 bootstrap-devops-cluster:
-	bash bootstrap-devops-cluster.sh custom-image=$(CUSTOM_IMAGE_ENABLED)
+	bash $(CLUSTER_SCRIPTS_DIR)/bootstrap-devops-cluster.sh
+# Run the script to bootstrap the devops-cluster with custom image
+# Usage: make bootstrap-devops-cluster-custom
+bootstrap-devops-cluster-custom:
+	make build
+	bash $(CLUSTER_SCRIPTS_DIR)/bootstrap-devops-cluster.sh --enable-custom-image
+
+# Tear down kind clusters
+tear-down:
+	bash $(CLUSTER_SCRIPTS_DIR)/tear-down-cluster.sh
 
 # Help command to display available targets
 help:
@@ -46,7 +55,11 @@ help:
 	@echo "       Clean up the Docker image that was just built."
 	@echo "  make clean-all-images"
 	@echo "       Clean up all Docker images with the tag: $(DOCKER_IMAGE_TAG)"
-	@echo "  make bootstrap-devops-cluster [custom-image=<true/false>]"
+	@echo "  make bootstrap-devops-cluster"
 	@echo "       Run the script to bootstrap the devops-cluster."
+	@echo "  make bootstrap-devops-cluster-custom"
+	@echo "       Run the script to bootstrap the devops-cluster with custom image."
+	@echo "  make tear-down"
+	@echo "       Tear down kind clusters."
 	@echo "  make help"
 	@echo "       Display available targets."
