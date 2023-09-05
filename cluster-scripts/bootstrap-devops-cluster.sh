@@ -25,7 +25,8 @@ prompt_for_applications() {
   echo "1. Nginx Ingress Controller"
   echo "2. Kube Prometheus Stack"
   echo "3. HashiCorp Vault"
-  echo "4. Tekton Pipelines with UI"
+  echo "4. Cert-Manager"
+  echo "5. Tekton Pipelines with UI"
   read -p "Enter your selection(s): " SELECTIONS
 }
 
@@ -77,6 +78,7 @@ main() {
         install_nginx_ingress
         install_kube_prometheus_stack
         install_hashicorp_vault
+        install_cert_manager
         install_tekton
         ;;
       1)
@@ -89,6 +91,9 @@ main() {
         install_hashicorp_vault
         ;;
       4)
+        install_cert_manager
+        ;;
+      5)
         install_tekton
         ;;
       "None")

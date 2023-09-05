@@ -1,3 +1,7 @@
 Containerfiles/Org-CA-Cert.crt
-apps/hashicorp-vault/CaC/vault/kubernetes/kind_cluster/**
+apps/hashicorp-vault/CaC/vault/kubernetes/kind_cluster/ca.pem
+apps/hashicorp-vault/CaC/vault/kubernetes/kind_cluster/token_reviewr_jwt
+apps/hashicorp-vault/CaC/vault/.terraform
 apps/hashicorp-vault/CaC/vault/*.tfvars
+*.pem
+*.csr

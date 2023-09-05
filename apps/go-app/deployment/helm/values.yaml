@@ -62,20 +62,21 @@ service:
 ingress:
   enabled: true
   className: "nginx"
-  annotations: {}
-    # ingress.kubernetes.io/ssl-redirect: "true"
-    # kubernetes.io/ingress.allow-http: "false"
-    # kubernetes.io/tls-acme: "true"
-    # cert-manager.io/cluster-issuer: vault-issuer
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "true"
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: vault-issuer
+    # cert-manager.io/issuer: vault-issuer
   hosts:
     - host: go-app.testbox.pod
       paths:
         - path: /
           pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+  tls:
+   - secretName: go-app-tls
+     hosts:
+       - go-app.testbox.pod
 
 resources: 
   # We usually recommend not to specify default resources and to leave this as a conscious

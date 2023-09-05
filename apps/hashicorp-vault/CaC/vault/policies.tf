@@ -19,6 +19,12 @@ resource "vault_policy" "snapshot_policy" {
   policy = file("policies/snapshot.hcl")
 }
 
+# Create 'pki' policy
+resource "vault_policy" "pki_certmanager_policy" {
+  name   = "pki-cert-manager"
+  policy = file("policies/pki/cert-manager.hcl")
+}
+
 #---------------------
 # development policies
 #---------------------
