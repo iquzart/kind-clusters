@@ -184,12 +184,12 @@ variable "pki_int_role_allow_subdomains" {
   default     = true
 }
 
-variable "pki_int_cert_common_name" {
-  description = "Common name for the intermediate certificate"
-  default     = "go-app.testbox.pod"
-}
+# variable "pki_int_cert_common_name" {
+#   description = "Common name for the intermediate certificate"
+#   default     = "go-app.testbox.pod"
+# }
 
-variable "pki_int_cert_ttl" {
-  description = "TTL for the intermediate certificate"
-  default     = 3600
-}
+# variable "pki_int_cert_ttl" {
+#   description = "TTL for the intermediate certificate"
+#   default     = 3600
+# }

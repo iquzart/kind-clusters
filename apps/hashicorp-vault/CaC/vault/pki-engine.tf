@@ -96,11 +96,11 @@ resource "vault_pki_secret_backend_role" "intermediate_role" {
   allow_subdomains = var.pki_int_role_allow_subdomains
 }
 
-resource "vault_pki_secret_backend_cert" "example-dot-com" {
-  issuer_ref  = vault_pki_secret_backend_issuer.intermediate.issuer_ref
-  backend     = vault_pki_secret_backend_role.intermediate_role.backend
-  name        = vault_pki_secret_backend_role.intermediate_role.name
-  common_name = var.pki_int_cert_common_name
-  ttl         = var.pki_int_cert_ttl
-  revoke     = true
-}
+# resource "vault_pki_secret_backend_cert" "example-dot-com" {
+#   issuer_ref  = vault_pki_secret_backend_issuer.intermediate.issuer_ref
+#   backend     = vault_pki_secret_backend_role.intermediate_role.backend
+#   name        = vault_pki_secret_backend_role.intermediate_role.name
+#   common_name = var.pki_int_cert_common_name
+#   ttl         = var.pki_int_cert_ttl
+#   revoke     = true
+# }

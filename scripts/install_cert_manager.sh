@@ -13,4 +13,7 @@ function install_cert_manager() {
     --set prometheus.enabled=false \
     --set webhook.timeoutSeconds=4 \
     --atomic
+
+  echo "setting up ClusterIssuer"
+  kubectl apply -f apps/cert-manager/ClusterIssuer-token.yaml
 }
