@@ -96,11 +96,23 @@ resource "vault_pki_secret_backend_role" "intermediate_role" {
   allow_subdomains = var.pki_int_role_allow_subdomains
 }
 
-# resource "vault_pki_secret_backend_cert" "example-dot-com" {
-#   issuer_ref  = vault_pki_secret_backend_issuer.intermediate.issuer_ref
-#   backend     = vault_pki_secret_backend_role.intermediate_role.backend
-#   name        = vault_pki_secret_backend_role.intermediate_role.name
-#   common_name = var.pki_int_cert_common_name
-#   ttl         = var.pki_int_cert_ttl
-#   revoke     = true
-# }
+resource "vault_pki_secret_backend_role" "istio-issuer" {
+  name               = "istio-issuer"
+  allow_any_name     = true 
+  allow_ip_sans      = true
+  ou                 = ["Information Technology"]
+  organization       = ["Kind Cluster - DevOps"]
+  country             = ["AE"]
+  use_csr_common_name = true 
+  ttl                 = 86400
+  max_ttl             = 2592000
+  key_type            = "rsa"
+  key_bits            = 2048
+  enforce_hostnames   = false 
+  allow_bare_domains  = true 
+  require_cn          = false 
+  allowed_domains     = ["istio-system.svc", "testbox.pod", "cluster.local", "spiffe://*"]
+  allow_subdomains    = true
+  issuer_ref          = vault_pki_secret_backend_issuer.intermediate.issuer_ref
+  backend             = vault_mount.pki_int.path
+}
