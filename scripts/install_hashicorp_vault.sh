@@ -26,20 +26,20 @@ function install_hashicorp_vault() {
   terraform apply --auto-approve
   cd -
 
-
-  # vault write pki_intermediate_ca/roles/cluster-dot-local  \
-  #   allow_any_name=true \
-  #   allowed_uri_sans=true \
-  #   allow_ip_sans=true \
-  #   ou="Information Technologu" \
-  #   organization="Kind Cluster - DevOps" \
-  #   country="AE" \
-  #   use_csr_common_name=true \
-  #   ttl="720h" \
-  #   max_ttl="720h" \
-  #   enforce_hostnames=false \
-  #   allow_bare_domains=true \
-  #   require_cn=false \
-  #   allowed_domains="istio-system.svc,testbox.pod,cluster.local,spiffe://*" \
-  #   allow_subdomains=true
+  sleep 3
+  vault write pki_intermediate_ca/roles/istio-issuer  \
+    allow_any_name=true \
+    allow_uri_sans=true \
+    allow_ip_sans=true \
+    ou="Information Technology" \
+    organization="Kind Cluster - DevOps" \
+    country="AE" \
+    use_csr_common_name=true \
+    ttl="720h" \
+    max_ttl="720h" \
+    enforce_hostnames=false \
+    allow_bare_domains=true \
+    require_cn=false \
+    allowed_uri_sans="istio-system.svc,testbox.pod,cluster.local,spiffe://*" \
+    allow_subdomains=true
 }
