@@ -57,12 +57,14 @@ resource "vault_mount" "pki_int" {
 }
 
 resource "vault_pki_secret_backend_intermediate_cert_request" "csr-request" {
+
   backend     = vault_mount.pki_int.path
   type        = "internal"
   common_name = var.pki_int_common_name
 }
 
 resource "vault_pki_secret_backend_root_sign_intermediate" "intermediate" {
+
   backend     = vault_mount.pki.path
   common_name = var.pki_int_root_sign_common_name
   csr         = vault_pki_secret_backend_intermediate_cert_request.csr-request.csr
@@ -76,25 +78,24 @@ resource "vault_pki_secret_backend_intermediate_set_signed" "intermediate" {
   certificate = vault_pki_secret_backend_root_sign_intermediate.intermediate.certificate
 }
 
-resource "vault_pki_secret_backend_issuer" "intermediate" {
-  backend     = vault_mount.pki_int.path
-  issuer_ref  = vault_pki_secret_backend_intermediate_set_signed.intermediate.imported_issuers[0]
-  issuer_name = var.pki_int_issuer_name
-}
+# resource "vault_pki_secret_backend_issuer" "intermediate" {
+#   backend     = vault_mount.pki_int.path
+#   issuer_ref  = vault_pki_secret_backend_intermediate_set_signed.intermediate.imported_issuers[0]
+#   issuer_name = var.pki_int_issuer_name
+# }
 
-resource "vault_pki_secret_backend_role" "intermediate_role" {
-  backend          = vault_mount.pki_int.path
-  issuer_ref       = vault_pki_secret_backend_issuer.intermediate.issuer_ref
-  name             = var.pki_int_role_name
-  ttl              = var.pki_int_role_ttl
-  max_ttl          = var.pki_int_role_max_ttl
-  allow_ip_sans    = true
-  key_type         = var.pki_int_role_key_type
-  key_bits         = var.pki_int_role_key_bits
-  require_cn       = false
-  allowed_domains  = var.pki_int_role_allowed_domains
-  allow_subdomains = var.pki_int_role_allow_subdomains
-}
+# resource "vault_pki_secret_backend_role" "intermediate_role" {
+#   backend          = vault_mount.pki_int.path
+#   name             = var.pki_int_role_name
+#   ttl              = var.pki_int_role_ttl
+#   max_ttl          = var.pki_int_role_max_ttl
+#   allow_ip_sans    = true
+#   key_type         = var.pki_int_role_key_type
+#   key_bits         = var.pki_int_role_key_bits
+#   require_cn       = false
+#   allowed_domains  = var.pki_int_role_allowed_domains
+#   allow_subdomains = var.pki_int_role_allow_subdomains
+# }
 
 # resource "vault_pki_secret_backend_role" "istio-issuer" {
 #   name               = "istio-issuer"
@@ -114,6 +115,5 @@ resource "vault_pki_secret_backend_role" "intermediate_role" {
 #   require_cn          = false 
 #   allowed_domains     = ["istio-system.svc", "testbox.pod", "cluster.local", "spiffe://*"]
 #   allow_subdomains    = true
-#   issuer_ref          = vault_pki_secret_backend_issuer.intermediate.issuer_ref
 #   backend             = vault_mount.pki_int.path
 # }
