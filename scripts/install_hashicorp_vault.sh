@@ -26,7 +26,7 @@ function install_hashicorp_vault() {
   terraform apply --auto-approve
   cd -
 
-  sleep 3
+  sleep 10
   vault write pki_intermediate_ca/roles/istio-issuer  \
     allow_any_name=true \
     allow_uri_sans=true \
