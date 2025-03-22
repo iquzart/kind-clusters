@@ -9,6 +9,7 @@ Creates devops-cluster and select one or multiple applications to set up from th
 2. Kube Prometheus Stack
 3. HashiCorp Vault
 4. Tekton Pipelines with UI
+5. Trivy Operator
 ```
 
 ## tear-down-cluster.sh
