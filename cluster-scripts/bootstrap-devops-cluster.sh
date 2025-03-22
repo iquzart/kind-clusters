@@ -6,7 +6,7 @@ readonly CLUSTER_NAME="devops-cluster"
 readonly CLUSTER_CONFIG_FILE="kind-cluster-configs/devops-cluster.yaml"
 readonly KIND_IMAGE="kindest/node"
 readonly KIND_CUSTOM_IMAGE_TAG="with-org-ca"
-readonly K8S_VERSION="v1.26.3"
+readonly K8S_VERSION="v1.32.2"
 readonly APP_SCRIPTS_DIR="./scripts"
 
 # Check if port 80 or 443 is in use
