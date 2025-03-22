@@ -1,9 +1,19 @@
 function install_hashicorp_vault() {
   echo "🌟 Starting HashiCorp Vault installation..."
 
+
   echo "🚀 Installing HashiCorp Vault with Helm..."
+
+  if ! helm repo list | grep -q "hashicorp"; then
+    helm repo add hashicorp https://helm.releases.hashicorp.com
+    helm repo update
+  else
+    echo "✅ HashiCorp repository already exists. Skipping add."
+  fi
+
   helm upgrade -i kind-vault -n vault --create-namespace \
-  --atomic -f apps/hashicorp-vault/deploy/values-kind-vault.yaml apps/hashicorp-vault/deploy/vault-helm-0.22.1
+    --atomic -f apps/hashicorp-vault/deploy/values-kind-vault.yaml apps/hashicorp-vault/deploy/vault-helm-0.22.1 
+
   if [ $? -eq 0 ]; then
     echo "✅ Vault installation was successful!"
   else
@@ -39,7 +49,7 @@ function install_hashicorp_vault() {
   echo "🔧 Configuring HashiCorp Vault with Terraform..."
   export VAULT_ADDR=http://vault.testbox.pod
   export VAULT_TOKEN=root
-  
+
   cd apps/hashicorp-vault/CaC/vault/
   terraform init
   if [ $? -eq 0 ]; then
