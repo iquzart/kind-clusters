@@ -26,6 +26,7 @@ prompt_for_applications() {
   echo "2. Kube Prometheus Stack"
   echo "3. HashiCorp Vault"
   echo "4. Tekton Pipelines with UI"
+  echo "5. Trivy Operator"
   read -p "Enter your selection(s): " SELECTIONS
 }
 
@@ -78,6 +79,7 @@ main() {
         install_kube_prometheus_stack
         install_hashicorp_vault
         install_tekton
+        install_trivy_operator
         ;;
       1)
         install_nginx_ingress
@@ -90,6 +92,9 @@ main() {
         ;;
       4)
         install_tekton
+        ;;
+      5)
+        install_trivy_operator
         ;;
       "None")
         echo "No applications selected"
