@@ -1,6 +1,6 @@
 function install_tekton() {
   echo "Setting up Tekton"
-  kubectl apply --filename https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml
+  kubectl apply --filename https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
 
   kubectl wait -n tekton-pipelines \
     --for=condition=ready pod \
