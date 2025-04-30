@@ -7,9 +7,13 @@ PLATFORM := $(shell [ "$(shell uname -m)" = "x86_64" ] && echo linux/amd64 || ec
 .PHONY: build clean-image clean-all-images bootstrap bootstrap-custom tear-down help
 
 build:
-	@echo "Building Docker image for Kind with certs..."
-	docker build --platform=$(PLATFORM) --build-arg K8S_VERSION=$(K8S_VERSION) \
-		-t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) -f containerfiles/Containerfile.OrgCa containerfiles/
+	@if docker image inspect $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) > /dev/null 2>&1; then \
+		echo "[*] Image $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) already exists. Skipping build."; \
+	else \
+		echo "[*] Building Docker image $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)..."; \
+		docker build --platform=$(PLATFORM) --build-arg K8S_VERSION=$(K8S_VERSION) \
+			-t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) -f containerfiles/Containerfile.OrgCa containerfiles/; \
+	fi
 
 clean-image:
 	docker rmi $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)

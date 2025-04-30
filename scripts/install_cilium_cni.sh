@@ -1,5 +1,5 @@
 function install_cilium_cni() {
-  echo "Starting Cilium CNI installation..."
+  log_info "Starting Cilium CNI installation..."
 
   helm repo add cilium https://helm.cilium.io/
 
@@ -10,14 +10,14 @@ function install_cilium_cni() {
     --set hubble.relay.enabled=true \
     --set hubble.ui.enabled=true
 
-  echo "Waiting for Cilium pods to be in the Running state..."
+  log_info "Waiting for Cilium pods to be in the Running state..."
 
   kubectl -n cilium-system wait --for=condition=ready pod -l k8s-app=cilium --timeout=600s
 
   if [ $? -eq 0 ]; then
-    echo "Cilium is fully installed and running."
+    log_success "Cilium is fully installed and running."
   else
-    echo "Cilium installation failed or timed out."
+    log_error "Cilium installation failed or timed out."
     exit 1
   fi
 }

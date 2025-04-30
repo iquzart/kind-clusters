@@ -1,5 +1,5 @@
 function install_tekton() {
-  echo "Setting up Tekton"
+  log_info "Setting up Tekton"
   kubectl apply --filename https://storage.googleapis.com/tekton-releases/dashboard/latest/release.yaml
 
   kubectl wait -n tekton-pipelines \
@@ -7,7 +7,7 @@ function install_tekton() {
     --selector=app.kubernetes.io/part-of=tekton-pipelines,app.kubernetes.io/component=controller \
     --timeout=90s
 
-  curl -sL https://raw.githubusercontent.com/tektoncd/dashboard/main/scripts/release-installer | \
+  curl -sL https://raw.githubusercontent.com/tektoncd/dashboard/main/scripts/release-installer |
     bash -s -- install latest --read-write --ingress-url tekton-dashboard.testbox.pod
 
   kubectl wait -n tekton-pipelines \

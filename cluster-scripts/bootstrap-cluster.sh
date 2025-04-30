@@ -1,18 +1,16 @@
-#!/bin/bash
-
 set -euo pipefail
 
 source "$(dirname "$0")/../config.sh"
 
 check_ports() {
   if netstat -ln | grep -E ':80 |:443 '; then
-    echo "Error: Port 80 or 443 is already in use."
+    log_error "Port 80 or 443 is already in use."
     exit 1
   fi
 }
 
 prompt_for_cluster() {
-  echo "Select cluster configuration:"
+  echo -e "${MAGENTA}==> Select a cluster configuration:${RESET}"
   select choice in "devops" "basic" "api-exposed" "cilium-cni"; do
     case "$choice" in
     devops | basic | api-exposed | cilium-cni)
@@ -20,24 +18,29 @@ prompt_for_cluster() {
       CLUSTER_CONFIG_FILE="cluster-configs/${CLUSTER_NAME}.yaml"
       export CLUSTER_NAME CLUSTER_CONFIG_FILE
       if [[ "$choice" == "cilium-cni" ]]; then
-        echo "Cilium CNI selected. Cilium will be installed."
+        log_success "Selected: ${MAGENTA}${CLUSTER_NAME}${RESET} — Cilium will be installed."
+      else
+        log_success "Selected: ${MAGENTA}${CLUSTER_NAME}${RESET}"
       fi
       break
       ;;
-    *) echo "Invalid option. Try again." ;;
+    *)
+      log_error "Invalid option. Please try again."
+      ;;
     esac
   done
 }
 
 prompt_for_applications() {
-  echo "Select applications to install (comma-separated):"
-  echo "  0. All"
-  echo "  1. Nginx Ingress Controller"
-  echo "  2. Kube Prometheus Stack"
-  echo "  3. HashiCorp Vault"
-  echo "  4. Tekton Pipelines"
-  echo "  5. Trivy Operator"
-  read -p "Selections: " SELECTIONS
+  echo -e "${MAGENTA}==> Select applications to install (comma-separated):${RESET}"
+  echo -e "${BLUE}  [0]${RESET} All"
+  echo -e "${BLUE}  [1]${RESET} Nginx Ingress Controller"
+  echo -e "${BLUE}  [2]${RESET} Kube Prometheus Stack"
+  echo -e "${BLUE}  [3]${RESET} HashiCorp Vault"
+  echo -e "${BLUE}  [4]${RESET} Tekton Pipelines"
+  echo -e "${BLUE}  [5]${RESET} Trivy Operator"
+  echo -ne "${MAGENTA}==> Your selection:${RESET} "
+  read SELECTIONS
 }
 
 create_cluster() {
@@ -49,6 +52,7 @@ create_cluster() {
   IMAGE="${KIND_IMAGE}:${K8S_VERSION}"
   [[ "$ENABLE_CUSTOM_IMAGE" == "true" ]] && IMAGE="${IMAGE}-${KIND_CUSTOM_IMAGE_TAG}"
 
+  log_info "Creating Kind cluster with image: ${IMAGE}"
   echo "$CONFIG" | kind create cluster --image "$IMAGE" --name "$CLUSTER_NAME" --config=-
 }
 
@@ -59,7 +63,7 @@ install_apps() {
 
   # Install Cilium if the cluster is cilium-cni
   if [[ "$CLUSTER_NAME" == "cilium-cni" ]]; then
-    echo "Installing Cilium CNI..."
+    log_info "Installing Cilium CNI..."
     install_cilium_cni
   fi
 
@@ -77,8 +81,8 @@ install_apps() {
     3) install_hashicorp_vault ;;
     4) install_tekton ;;
     5) install_trivy_operator ;;
-    "None") echo "No apps selected." ;;
-    *) echo "Invalid app selection: $app" ;;
+    "None") log_info "No apps selected." ;;
+    *) log_warn "Invalid app selection: $app" ;;
     esac
   done
 }
@@ -88,10 +92,10 @@ main() {
   prompt_for_cluster
 
   if kind get clusters | grep -q "$CLUSTER_NAME"; then
-    echo "Cluster '$CLUSTER_NAME' already exists. Skipping creation."
+    log_info "Cluster '${CLUSTER_NAME}' already exists. Skipping creation."
     prompt_for_applications
   else
-    echo "Creating cluster '$CLUSTER_NAME'..."
+    log_info "Creating cluster '${CLUSTER_NAME}'..."
     create_cluster
   fi
 
