@@ -1,0 +1,37 @@
+cluster_types:
+  base:
+    version: "1.32.2"
+  devops:
+    version: "1.32.2"
+  cilium-cni:
+    version: "1.32.2"
+  api-exposed:
+    version: "1.32.2"
+
+custom_image:
+  enabled: true
+  version: "1.32.2"
+  custom_image: "kindest/node:v1.32.2-with-org-ca"
+  ca_certs:
+    - "Containerfiles/Org-CA-Cert.crt"
+
+services:
+  ingress-nginx:
+    version: "4.8.3"
+    repo_url: "https://kubernetes.github.io/ingress-nginx"
+    repo_name: ingress-nginx
+    namespace: "ingress-nginx"
+    values_file: services/ingress-nginx/values/values-kind.yaml
+  vault:
+    version: "0.30.0"
+    repo_url: "https://helm.releases.hashicorp.com"
+    repo_name: hashicorp
+    namespace: "vault"
+    values_file: services/vault/values/values-kind.yaml
+    terraform_dir: "services/vault/terraform"
+  kube-prometheus-stack:
+    version: "71.0.0"
+    repo_url: "https://prometheus-community.github.io/helm-charts"
+    repo_name: prometheus-community
+    namespace: "meta"
+    values_file: services/kube-prometheus-stack/values/values-kind.yaml
