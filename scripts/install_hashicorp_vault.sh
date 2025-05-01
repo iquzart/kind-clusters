@@ -43,15 +43,33 @@ function install_hashicorp_vault() {
   printf 'kubernetes_host = "%s"\n' "$K8S_HOST" >apps/hashicorp-vault/CaC/vault/terraform.tfvars
   log_success "Kubernetes host configured successfully!"
 
-  log_info "Generate CA Certificate for PKI"
-  source scripts/generate_root_ca.sh
-  generate_ca 90 "TestBox Root CA"
-
   log_info "Configuring HashiCorp Vault with Terraform..."
   export VAULT_ADDR=http://vault.testbox.pod
   export VAULT_TOKEN=root
 
   cd apps/hashicorp-vault/CaC/vault/
+  terraform init
+  if [ $? -eq 0 ]; then
+    log_success "Terraform initialized successfully!"
+  else
+    log_error "Terraform initialization failed. Please check the logs."
+    return 1
+  fi
+
+  terraform apply --auto-approve
+  if [ $? -eq 0 ]; then
+    log_success "Terraform applied successfully!"
+  else
+    log_error "Terraform apply failed. Please check the logs."
+    return 1
+  fi
+  cd -
+
+  log_info "Generate CA Certificate for PKI"
+  source scripts/generate_root_ca.sh
+  generate_ca 180 "TestBox Root CA v1"
+
+  cd apps/hashicorp-vault/CaC/vault_pki/
   terraform init
   if [ $? -eq 0 ]; then
     log_success "Terraform initialized successfully!"
