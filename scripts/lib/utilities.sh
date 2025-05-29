@@ -9,19 +9,24 @@ NC='\033[0m'
 
 # Logging
 log() {
-  echo -e "${BLUE}[INFO]${NC} $1"
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] ${BLUE}[INFO]${NC} $1"
 }
 
 log_success() {
-  echo -e "${GREEN}[SUCCESS]${NC} $1"
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] ${GREEN}[SUCCESS]${NC} $1"
 }
 
 log_warning() {
-  echo -e "${YELLOW}[WARNING]${NC} $1"
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] ${YELLOW}[WARNING]${NC} $1"
 }
 
 log_error() {
-  echo -e "${RED}[ERROR]${NC} $1"
+  echo -e "[$(date '+%Y-%m-%d %H:%M:%S')] ${RED}[ERROR]${NC} $1"
+}
+
+log_section() {
+  echo ""
+  echo -e "${GREEN}==> $1${NC}"
 }
 
 # Validation

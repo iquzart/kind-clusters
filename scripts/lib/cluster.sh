@@ -1,11 +1,12 @@
 #!/bin/bash
-source ./utilities.sh
-source ./custom_image_builder.sh
+# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
+# source "$SCRIPT_DIR/utilities.sh"
+# source "$SCRIPT_DIR/custom_image_builder.sh"
 
 create_cluster() {
   local cluster_type=$1
+  local cluster_name="$2"
   local config_file="config/cluster-profiles/${cluster_type}.yaml"
-  local cluster_name="${cluster_type}-cluster"
 
   if ! yq eval ".cluster_types.$cluster_type" config/config.yaml >/dev/null 2>&1; then
     log_error "Invalid cluster type: $cluster_type"
@@ -24,7 +25,7 @@ create_cluster() {
   kind create cluster \
     --name "$cluster_name" \
     --image "$node_image" \
-    --config "$config_file" || {
+    --config "$config_file" >/dev/null 2>&1 || {
     log_error "Cluster creation failed"
     return 1
   }
@@ -42,7 +43,7 @@ delete_cluster() {
   fi
 
   log "Deleting cluster ${cluster_name}..."
-  kind delete cluster --name "$cluster_name" &&
+  kind delete cluster --name "$cluster_name" >/dev/null 2>&1 &&
     log_success "Cluster deleted" ||
     log_error "Cluster deletion failed"
 }

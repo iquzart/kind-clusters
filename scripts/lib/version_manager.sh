@@ -1,5 +1,6 @@
 #!/bin/bash
-source ./utilities.sh
+# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
+# source "$SCRIPT_DIR/utilities.sh"
 
 CONFIG_FILE="../config/config.yaml"
 

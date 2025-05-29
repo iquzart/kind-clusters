@@ -1,5 +1,6 @@
 #!/bin/bash
-source ./utilities.sh
+# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
+# source "$SCRIPT_DIR/utilities.sh"
 
 service_exists() {
   local cluster=$1
@@ -17,7 +18,7 @@ install_service() {
   local service=$1
   local cluster=$2
 
-  log "Installing ${service} on ${cluster}..."
+  log "Installing '${service}' on  cluster '${cluster}'"
 
   local version=$(get_service_config "$service" "version")
   local repo_url=$(get_service_config "$service" "repo_url")
@@ -39,10 +40,8 @@ install_service() {
     --values "services/$service/values/values-kind.yaml"
 
   if [ $? -eq 0 ]; then
-    log_success "${service} installed successfully"
     return 0
   else
-    log_error "Failed to install ${service}"
     return 1
   fi
 }

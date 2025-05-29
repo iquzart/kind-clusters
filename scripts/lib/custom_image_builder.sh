@@ -1,5 +1,6 @@
 #!/bin/bash
-source ./utilities.sh
+# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
+# source "$SCRIPT_DIR/utilities.sh"
 
 should_build_custom_image() {
   yq eval '.custom_image.enabled' config/config.yaml | grep -q 'true'
@@ -46,7 +47,7 @@ build_custom_image_if_needed() {
 
   log "Checking for existing custom image ${image_name}..."
   if docker image inspect "$image_name" >/dev/null 2>&1; then
-    log_success "Custom image already exists"
+    log "Custom image already exists"
     return 0
   fi
 
