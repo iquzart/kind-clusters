@@ -1,7 +1,4 @@
 #!/bin/bash
-# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
-# source "$SCRIPT_DIR/utilities.sh"
-# source "$SCRIPT_DIR/custom_image_builder.sh"
 
 create_cluster() {
   local cluster_type=$1
@@ -42,10 +39,7 @@ delete_cluster() {
     return 1
   fi
 
-  log "Deleting cluster ${cluster_name}..."
-  kind delete cluster --name "$cluster_name" >/dev/null 2>&1 &&
-    log_success "Cluster deleted" ||
-    log_error "Cluster deletion failed"
+  kind delete cluster --name "$cluster_name" >/dev/null 2>&1
 }
 
 list_clusters() {

@@ -1,6 +1,4 @@
 #!/bin/bash
-# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
-# source "$SCRIPT_DIR/utilities.sh"
 
 service_exists() {
   local cluster=$1

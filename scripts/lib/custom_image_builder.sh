@@ -1,6 +1,4 @@
 #!/bin/bash
-# SCRIPT_DIR=$(dirname "$0") # This will be scripts/lib/
-# source "$SCRIPT_DIR/utilities.sh"
 
 should_build_custom_image() {
   yq eval '.custom_image.enabled' config/config.yaml | grep -q 'true'

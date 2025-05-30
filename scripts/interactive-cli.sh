@@ -7,32 +7,58 @@ source "$SCRIPT_DIR/lib/services.sh"
 source "$SCRIPT_DIR/lib/version_manager.sh"
 source "$SCRIPT_DIR/lib/custom_image_builder.sh"
 
+# Color definitions
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Simplified menu display function
+display_menu_header() {
+  local title="$1"
+  local padding=2 # Spaces on each side of the title
+  local plain_title=$(echo -e "$title" | sed 's/\x1B\[[0-9;]*[mK]//g')
+  local title_length=${#plain_title}
+  local box_width=$((title_length + padding * 2))
+
+  # Create borders dynamically
+  local top_border="╔$(printf '═%.0s' $(seq 1 $box_width))╗"
+  local bottom_border="╚$(printf '═%.0s' $(seq 1 $box_width))╝"
+  local middle_line="║${NC}${YELLOW}$(printf '%*s' $(((box_width - title_length) / 2)) "")${title}$(printf '%*s' $(((box_width - title_length + 1) / 2)) "")${NC}${BLUE}║"
+
+  echo
+  echo -e "${BLUE}${top_border}${NC}"
+  echo -e "${BLUE}${middle_line}${NC}"
+  echo -e "${BLUE}${bottom_border}${NC}"
+  echo
+}
+
 # Main menu prompt
 show_main_menu() {
-  echo "╔══════════════════════════╗"
-  echo "║ Kind Cluster Manager     ║"
-  echo "╚══════════════════════════╝"
-  echo
+  display_menu_header "Kind Cluster Manager"
+
   echo "What would you like to do?"
-  echo "1) Create Cluster"
-  echo "2) Delete Cluster"
-  echo "3) List Clusters"
-  echo "4) Install Application"
-  echo "5) Exit"
+  echo -e "${GREEN}1)${NC} Create Cluster"
+  echo -e "${GREEN}2)${NC} Delete Cluster"
+  echo -e "${GREEN}3)${NC} List Clusters"
+  echo -e "${GREEN}4)${NC} Install Application"
+  echo -e "${RED}q)${NC} Exit"
   echo
-  read -p "Select option (1-5): " main_choice
+
+  read -p "Select option (1-4): " main_choice
 
   case $main_choice in
   1) handle_create_cluster ;;
   2) handle_delete_cluster ;;
   3) handle_list_clusters ;;
   4) handle_install_application ;;
-  5)
-    echo "Goodbye!"
+  q)
+    echo -e "${GREEN}Goodbye!${NC}"
     exit 0
     ;;
   *)
-    echo "Invalid option. Please try again."
+    echo -e "${RED}Invalid option. Please try again.${NC}"
     show_main_menu
     ;;
   esac
@@ -40,11 +66,7 @@ show_main_menu() {
 
 # Handle cluster creation flow
 handle_create_cluster() {
-  echo
-  echo "╔════════════════════════╗"
-  echo "║ Select Cluster Profile ║"
-  echo "╚════════════════════════╝"
-  echo
+  display_menu_header "Select Cluster Profile"
 
   # Get cluster profiles from config
   local profiles=($(yq eval '.cluster_types | keys | .[]' config/config.yaml))
@@ -53,10 +75,10 @@ handle_create_cluster() {
   echo "Available cluster profiles:"
   for profile in "${profiles[@]}"; do
     local version=$(yq eval ".cluster_types.$profile.version" config/config.yaml)
-    echo "$counter) $profile (v$version)"
+    echo -e "${GREEN}$counter)${NC} $profile (v$version)"
     ((counter++))
   done
-  echo "$counter) Back to main menu"
+  echo -e "${BLUE}$counter)${NC} Back to main menu"
   echo
 
   read -p "Select cluster profile (1-$counter): " profile_choice
@@ -69,7 +91,7 @@ handle_create_cluster() {
     local selected_profile=${profiles[$((profile_choice - 1))]}
     show_applications_menu "$selected_profile"
   else
-    echo "Invalid option. Please try again."
+    echo -e "${RED}Invalid option. Please try again.${NC}"
     handle_create_cluster
   fi
 }
@@ -77,11 +99,8 @@ handle_create_cluster() {
 # Show applications menu after profile selection
 show_applications_menu() {
   local profile=$1
-  echo
-  echo "╔══════════════════════════╗"
-  echo "║ Select Applications      ║"
-  echo "╚══════════════════════════╝"
-  echo "Profile: $profile"
+  display_menu_header "Select Applications"
+  echo -e "Profile: ${YELLOW}$profile${NC}"
   echo
 
   # Get available services from config
@@ -91,11 +110,11 @@ show_applications_menu() {
   echo "Available applications:"
   for service in "${services[@]}"; do
     local version=$(yq eval ".services.$service.version" config/config.yaml)
-    echo "$counter) $service (v$version)"
+    echo -e "${GREEN}$counter)${NC} $service (v$version)"
     ((counter++))
   done
-  echo "$counter) Create cluster without additional applications"
-  echo "$((counter + 1))) Back to profile selection"
+  echo -e "${GREEN}$counter)${NC} Create cluster without additional applications"
+  echo -e "${BLUE}$((counter + 1)))${NC} Back to profile selection"
   echo
 
   read -p "Select applications (comma-separated numbers, or single number): " app_choice
@@ -124,7 +143,7 @@ show_applications_menu() {
       )
       create_cluster_with_apps "$profile" "$apps_string"
     else
-      echo "No valid applications selected. Creating cluster without applications."
+      echo -e "${YELLOW}No valid applications selected. Creating cluster without applications.${NC}"
       create_cluster_with_apps "$profile" ""
     fi
   fi
@@ -135,12 +154,12 @@ create_cluster_with_apps() {
   local profile=$1
   local apps=$2
 
-  echo
-  echo "Creating cluster with profile: $profile"
+  display_menu_header "Creating Cluster"
+  echo -e "Profile: ${YELLOW}$profile${NC}"
   if [[ -n "$apps" ]]; then
-    echo "Applications to install: $apps"
+    echo -e "Applications to install: ${GREEN}$apps${NC}"
   else
-    echo "No additional applications will be installed."
+    echo -e "${YELLOW}No additional applications will be installed.${NC}"
   fi
   echo
 
@@ -149,13 +168,13 @@ create_cluster_with_apps() {
     cluster_name="kind-$profile-$(date +%s)"
   fi
 
+  log_section "Creating Cluster"
   log "Creating cluster '$cluster_name'"
 
-  # Call the create_cluster function
   if create_cluster "$profile" "$cluster_name"; then
     # Install selected applications
     if [[ -n "$apps" ]]; then
-      log "Installing applications..."
+      log_section "Installing applications"
       IFS=',' read -ra app_array <<<"$apps"
       for app in "${app_array[@]}"; do
         app=$(echo "$app" | xargs) # trim whitespace
@@ -176,24 +195,20 @@ create_cluster_with_apps() {
     log_error "Failed to create cluster '$cluster_name'"
   fi
 
-  echo
-  read -p "Press Enter to return to main menu..."
-  show_main_menu
+  # echo
+  # read -p "Press Enter to return to main menu..."
+  # show_main_menu
 }
 
 # Handle cluster deletion
 handle_delete_cluster() {
-  echo
-  echo "╔════════════════════════╗"
-  echo "║ Delete Cluster         ║"
-  echo "╚════════════════════════╝"
-  echo
+  display_menu_header "Delete Cluster"
 
   # Get existing clusters
   local clusters=($(kind get clusters 2>/dev/null))
 
   if [[ ${#clusters[@]} -eq 0 ]]; then
-    echo "No Kind clusters found."
+    echo -e "${YELLOW}No Kind clusters found.${NC}"
     echo
     read -p "Press Enter to return to main menu..."
     show_main_menu
@@ -203,10 +218,10 @@ handle_delete_cluster() {
   local counter=1
   echo "Available clusters to delete:"
   for cluster in "${clusters[@]}"; do
-    echo "$counter) $cluster"
+    echo -e "${RED}$counter)${NC} $cluster"
     ((counter++))
   done
-  echo "$counter) Back to main menu"
+  echo -e "${BLUE}$counter)${NC} Back to main menu"
   echo
 
   read -p "Select cluster to delete (1-$counter): " delete_choice
@@ -218,7 +233,7 @@ handle_delete_cluster() {
     local selected_cluster=${clusters[$((delete_choice - 1))]}
 
     echo
-    echo "⚠️  WARNING: This will permanently delete cluster '$selected_cluster'"
+    echo -e "${RED}⚠️  WARNING: This will permanently delete cluster '$selected_cluster'${NC}"
     read -p "Are you sure? (y/N): " confirm
 
     if [[ $confirm =~ ^[Yy]$ ]]; then
@@ -232,7 +247,7 @@ handle_delete_cluster() {
       log "Deletion cancelled."
     fi
   else
-    echo "Invalid option. Please try again."
+    echo -e "${RED}Invalid option. Please try again.${NC}"
     handle_delete_cluster
     return
   fi
@@ -244,17 +259,13 @@ handle_delete_cluster() {
 
 # Handle application installation to existing cluster
 handle_install_application() {
-  echo
-  echo "╔══════════════════════════╗"
-  echo "║ Install Application      ║"
-  echo "╚══════════════════════════╝"
-  echo
+  display_menu_header "Install Application"
 
   # Get existing clusters
   local clusters=($(kind get clusters 2>/dev/null))
 
   if [[ ${#clusters[@]} -eq 0 ]]; then
-    echo "No Kind clusters found. Please create a cluster first."
+    echo -e "${YELLOW}No Kind clusters found. Please create a cluster first.${NC}"
     echo
     read -p "Press Enter to return to main menu..."
     show_main_menu
@@ -265,10 +276,10 @@ handle_install_application() {
   local counter=1
   echo "Select target cluster:"
   for cluster in "${clusters[@]}"; do
-    echo "$counter) $cluster"
+    echo -e "${GREEN}$counter)${NC} $cluster"
     ((counter++))
   done
-  echo "$counter) Back to main menu"
+  echo -e "${BLUE}$counter)${NC} Back to main menu"
   echo
 
   read -p "Select cluster (1-$counter): " cluster_choice
@@ -280,7 +291,7 @@ handle_install_application() {
     local selected_cluster=${clusters[$((cluster_choice - 1))]}
     show_application_install_menu "$selected_cluster"
   else
-    echo "Invalid option. Please try again."
+    echo -e "${RED}Invalid option. Please try again.${NC}"
     handle_install_application
   fi
 }
@@ -288,11 +299,8 @@ handle_install_application() {
 # Show applications menu for installation
 show_application_install_menu() {
   local cluster=$1
-  echo
-  echo "╔══════════════════════════╗"
-  echo "║ Select Application       ║"
-  echo "╚══════════════════════════╝"
-  echo "Target cluster: $cluster"
+  display_menu_header "Select Application"
+  echo -e "Target cluster: ${YELLOW}$cluster${NC}"
   echo
 
   # Get available services from config
@@ -306,13 +314,13 @@ show_application_install_menu() {
     # Check if application is already installed (optional check)
     local installed_status=""
     if kubectl get namespace "${service}" --context "kind-${cluster}" >/dev/null 2>&1; then
-      installed_status=" (already installed)"
+      installed_status=" ${GREEN}(already installed)${NC}"
     fi
 
-    echo "$counter) $service (v$version)$installed_status"
+    echo -e "${GREEN}$counter)${NC} $service (v$version)$installed_status"
     ((counter++))
   done
-  echo "$counter) Back to cluster selection"
+  echo -e "${BLUE}$counter)${NC} Back to cluster selection"
   echo
 
   read -p "Select application to install (1-$counter): " app_choice
@@ -324,7 +332,7 @@ show_application_install_menu() {
     local selected_app=${services[$((app_choice - 1))]}
     install_application_to_cluster "$selected_app" "$cluster"
   else
-    echo "Invalid option. Please try again."
+    echo -e "${RED}Invalid option. Please try again.${NC}"
     show_application_install_menu "$cluster"
   fi
 }
@@ -335,13 +343,10 @@ install_application_to_cluster() {
   local cluster=$2
   local version=$(yq eval ".services.$app.version" config/config.yaml)
 
+  display_menu_header "Installing Application"
   echo
-  echo "╔══════════════════════════╗"
-  echo "║ Installing Application   ║"
-  echo "╚══════════════════════════╝"
-  echo
-  echo "Application: $app (v$version)"
-  echo "Target cluster: $cluster"
+  echo -e "Application: ${YELLOW}$app${NC} (v$version)"
+  echo -e "Target cluster: ${YELLOW}$cluster${NC}"
   echo
 
   # Check if cluster is accessible
@@ -356,10 +361,10 @@ install_application_to_cluster() {
   # Check if application namespace already exists
   local namespace=$(yq eval ".services.$app.namespace" config/config.yaml 2>/dev/null || echo "$app")
   if kubectl get namespace "$namespace" --context "kind-$cluster" >/dev/null 2>&1; then
-    echo "⚠️  Application '$app' appears to already be installed in cluster '$cluster'"
+    echo -e "${YELLOW}⚠️  Application '$app' appears to already be installed in cluster '$cluster'${NC}"
     read -p "Continue anyway? (y/N): " confirm
     if [[ ! $confirm =~ ^[Yy]$ ]]; then
-      echo "Installation cancelled."
+      echo -e "${YELLOW}Installation cancelled.${NC}"
       echo
       read -p "Press Enter to return to main menu..."
       show_main_menu
@@ -373,46 +378,44 @@ install_application_to_cluster() {
     log_success "Application '$app' installed successfully to cluster '$cluster'!"
     echo
     echo "Installation Summary:"
-    echo "- Application: $app (v$version)"
-    echo "- Cluster: $cluster"
-    echo "- Namespace: $namespace"
+    echo -e "- Application: ${YELLOW}$app${NC} (v$version)"
+    echo -e "- Cluster: ${YELLOW}$cluster${NC}"
+    echo -e "- Namespace: ${YELLOW}$namespace${NC}"
 
     # Show some basic status info
     echo
-    echo "Checking installation status..."
-    kubectl get pods -n "$namespace" --context "kind-$cluster" 2>/dev/null || echo "No pods found in namespace $namespace"
+    log "Checking installation status..."
+    kubectl get pods -n "$namespace" --context "kind-$cluster" 2>/dev/null || echo -e "${YELLOW}No pods found in namespace $namespace${NC}"
   else
     echo
     log_error "Failed to install application '$app' to cluster '$cluster'"
-    echo "Please check the logs for more details."
+    echo -e "${RED}Please check the logs for more details.${NC}"
   fi
 
   echo
   read -p "Press Enter to return to main menu..."
   show_main_menu
 }
+
 handle_list_clusters() {
-  echo
-  echo "╔════════════════════════╗"
-  echo "║ Kind Clusters          ║"
-  echo "╚════════════════════════╝"
-  echo
+  display_menu_header "Kind Clusters"
 
   # Get existing clusters
   local clusters=($(kind get clusters 2>/dev/null))
 
   if [[ ${#clusters[@]} -eq 0 ]]; then
-    echo "No Kind clusters found."
+    echo -e "${YELLOW}No Kind clusters found.${NC}"
   else
-    echo "Found ${#clusters[@]} cluster(s):"
+    echo -e "Found ${GREEN}${#clusters[@]}${NC} cluster(s):"
     echo
     for i in "${!clusters[@]}"; do
       local cluster=${clusters[$i]}
-      echo "$((i + 1)). $cluster"
+      echo -e "${GREEN}$((i + 1)). $cluster${NC}"
 
       # Get cluster info if possible
       local status=$(kubectl cluster-info --context "kind-$cluster" 2>/dev/null | head -1 | grep -o "running" || echo "unknown")
-      echo "   Status: $status"
+      [[ "$status" == "running" ]] && status="${GREEN}$status${NC}" || status="${RED}$status${NC}"
+      echo -e "   Status: $status"
 
       # Get node count
       local nodes=$(kubectl get nodes --context "kind-$cluster" --no-headers 2>/dev/null | wc -l || echo "0")
@@ -440,3 +443,4 @@ main() {
 
 # Run main function
 main "$@"
+

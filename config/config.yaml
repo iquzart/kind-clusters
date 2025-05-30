@@ -1,6 +1,6 @@
 cluster_types:
-  base:
-    version: "1.32.2"
+  # base:
+  #   version: "1.32.2"
   devops:
     version: "1.32.2"
   cilium-cni:
