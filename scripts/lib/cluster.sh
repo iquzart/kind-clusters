@@ -42,9 +42,16 @@ delete_cluster() {
   kind delete cluster --name "$cluster_name" >/dev/null 2>&1
 }
 
-list_clusters() {
-  log "Available clusters:"
-  kind get clusters || log_error "Failed to list clusters"
+check_cluster_state() {
+  local cluster=$1
+  # Get cluster status
+  local status=$(kubectl cluster-info --context "kind-$cluster" 2>/dev/null | head -1 | grep -o "running" || echo "unknown")
+  [[ "$status" == "running" ]] && status="${GREEN}$status${NC}" || status="${RED}$status${NC}"
+  echo -e "   Status: $status"
+
+  # Get node count
+  local nodes=$(kubectl get nodes --context "kind-$cluster" --no-headers 2>/dev/null | wc -l || echo "0")
+  echo "   Nodes: $nodes"
 }
 
 get_current_cluster() {

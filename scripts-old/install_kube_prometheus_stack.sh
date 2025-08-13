@@ -8,4 +8,3 @@ function install_kube_prometheus_stack() {
   log_info "Configuring Prometheus to scrap Nginx Metrics"
   kubectl apply -f apps/nginx-ingress/monitor.yaml
 }
-

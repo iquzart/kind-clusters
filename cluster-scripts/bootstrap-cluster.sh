@@ -59,7 +59,7 @@ create_cluster() {
 install_apps() {
   [[ -z "${SELECTIONS:-}" ]] && APPS=("None") || IFS=',' read -ra APPS <<<"$SELECTIONS"
 
-  for script in scripts/*.sh; do source "$script"; done
+  for script in scripts-old/*.sh; do source "$script"; done
 
   # Install Cilium if the cluster is cilium-cni
   if [[ "$CLUSTER_NAME" == "cilium-cni" ]]; then
