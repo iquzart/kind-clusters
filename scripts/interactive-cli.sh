@@ -6,8 +6,8 @@ source "$SCRIPT_DIR/lib/cluster.sh"
 source "$SCRIPT_DIR/lib/services.sh"
 source "$SCRIPT_DIR/lib/version_manager.sh"
 source "$SCRIPT_DIR/lib/custom_image_builder.sh"
-source "$SCRIPT_DIR/tui/menus.sh"
-source "$SCRIPT_DIR/tui/handlers.sh"
+source "$SCRIPT_DIR/ui/menu.sh"
+source "$SCRIPT_DIR/ui/handlers.sh"
 
 # Parse command line arguments
 parse_arguments() {
