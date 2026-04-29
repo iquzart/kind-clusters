@@ -13,9 +13,9 @@ check_ports() {
 
 prompt_for_cluster() {
   echo "Select cluster configuration:"
-  select choice in "devops" "basic" "api-exposed" "cilium-cni"; do
+  select choice in "devops" "basic" "api-exposed" "cilium-cni" "envoy-gateway"; do
     case "$choice" in
-    devops | basic | api-exposed | cilium-cni)
+    devops | basic | api-exposed | cilium-cni | envoy-gateway)
       CLUSTER_NAME="${choice}"
       CLUSTER_CONFIG_FILE="cluster-configs/${CLUSTER_NAME}.yaml"
       export CLUSTER_NAME CLUSTER_CONFIG_FILE
