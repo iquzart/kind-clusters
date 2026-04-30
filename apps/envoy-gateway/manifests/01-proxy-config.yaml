@@ -1,0 +1,88 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: default
+  namespace: envoy-gateway-system
+spec:
+  logging:
+    level:
+      default: info
+  mergeGateways: true
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        pod:
+          nodeSelector:
+            kubernetes.io/hostname: envoy-gateway-control-plane
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/master
+              operator: Exists
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/control-plane
+              operator: Exists
+        patch:
+          type: StrategicMerge
+          value:
+            spec:
+              template:
+                spec:
+                  containers:
+                    - name: envoy
+                      ports:
+                        - containerPort: 10080
+                          hostPort: 10080 # binds directly to node port 10080
+                          protocol: TCP
+                        - containerPort: 10443
+                          hostPort: 10443 # binds directly to node port 10443
+                          protocol: TCP
+                      resources:
+                        requests:
+                          cpu: 20m
+                          memory: 100Mi
+                    - name: shutdown-manager
+                      resources:
+                        requests:
+                          cpu: 5m
+                          memory: 10Mi
+      envoyService:
+        type: ClusterIP
+      envoyHpa:
+        maxReplicas: 2
+        metrics:
+          - resource:
+              name: cpu
+              target:
+                averageUtilization: 80
+                type: Utilization
+            type: Resource
+        minReplicas: 1
+      envoyPDB:
+        maxUnavailable: 1
+  telemetry:
+    accessLog:
+      settings:
+        - format:
+            type: JSON
+            json:
+              start_time: "%START_TIME%"
+              method: "%REQ(X-ENVOY-ORIGINAL-METHOD?:METHOD)%"
+              path: "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%"
+              protocol: "%PROTOCOL%"
+              response_code: "%RESPONSE_CODE%"
+              response_flags: "%RESPONSE_FLAGS%"
+              bytes_received: "%BYTES_RECEIVED%"
+              bytes_sent: "%BYTES_SENT%"
+              total_duration: "%DURATION%"
+              resp_backend_service_time: "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%"
+              req_x_forwarded_for: "%REQ(X-FORWARDED-FOR)%"
+              user_agent: "%REQ(USER-AGENT)%"
+              request_id: "%REQ(X-REQUEST-ID)%"
+              authority: "%REQ(:AUTHORITY)%"
+              backendHost: "%UPSTREAM_HOST%"
+              backendCluster: "%UPSTREAM_CLUSTER%"
+          sinks:
+            - type: File
+              file:
+                path: /dev/stdout
